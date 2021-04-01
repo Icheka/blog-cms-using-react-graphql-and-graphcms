@@ -1,13 +1,13 @@
 import React from 'react';
 import { Query } from 'react-apollo';
-import POSTS_QUERY from '../services/fetch_posts';
 import PostsPreview from '../components/postPreview';
 import TrendingPosts from '../components/Trending';
-
+import GraphCMSContent from '../services/graphcms';
 
 
 const Home = props => {
     const [posts, setPosts] = React.useState([]);
+    const Client = new GraphCMSContent();
 
     const LoadingPostsJsx = () => (
         <div>
@@ -27,7 +27,7 @@ const Home = props => {
                 <div className="col-8">
                     <h3>Recent Articles</h3>
                     <div className="border p-3">
-                        <Query query={POSTS_QUERY}>
+                        <Query query={Client.fetchPosts()}>
                             {
                                 ({loading, error, data}) => {
                                     if (loading) return LoadingPostsJsx();

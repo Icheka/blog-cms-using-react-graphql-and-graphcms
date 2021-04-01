@@ -8,7 +8,7 @@ const PostPreview = ({post, noImage}) => {
                     if (!noImage) {
                         return (
                             <div className="cover-image-wrapper">
-                                <img className="cover-image" src={ post.coverImage.url } />
+                                <img className="cover-image" src={ (() => post.coverImage !== null ? post.coverImage.url : 'https://media-exp1.licdn.com/dms/image/C4E1BAQErE1VCVPWvUQ/company-background_10000/0/1560357743378?e=1617372000&v=beta&t=N_Bp7Pp4kDYPRMlx1B47pTJ32h2QoRxlt-Csu39pzEA')() } />
                             </div>
                         )
                     } else {

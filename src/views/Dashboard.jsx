@@ -1,13 +1,19 @@
 import React from 'react';
 import { Query } from 'react-apollo';
-import POSTS_QUERY from '../services/fetch_posts';
 import TrendingPosts from '../components/Trending';
-import createPostApi from '../services/create_post';
+import GraphCMSContent from '../services/graphcms';
+import Modal from 'react-bootstrap/Modal';
 
 
 const Dashboard = props => {
     const [posts, setPosts] = React.useState([]);
     const [newPost, setNewPost] = React.useState({});
+    const Client = new GraphCMSContent();
+    const [showUpdateModal, setShowUpdateModal] = React.useState(false);
+    const [postToUpdate, setPostToUpdate] = React.useState({});
+    const [replacementPost, setReplacementPost] = React.useState({
+        title: '', author: '', body: ''
+    });
 
     const LoadingPostsJsx = () => (
         <div>
@@ -22,11 +28,27 @@ const Dashboard = props => {
     );
 
     const createPost = async () => {
-        // alert("creatigng...");
-        const res = await createPostApi(newPost);
-        alert(res)
+        const res = await Client.createPost(newPost);
+        console.log(res);
+        if (res !== false) alert("New Post Created Successfully!");
+        else 
+            alert("An error occurred!");
     }
 
+    const activateUpdateModal = post_id => {
+        const post = posts.filter(post => post.id == post_id)[0];
+        setPostToUpdate(post);
+        console.log(post)
+        setShowUpdateModal(true);
+    }
+
+    const handleUpdate = async () => {
+        const res = await Client.updatePost(postToUpdate.id, replacementPost);
+
+        if (res !== false) alert(`Successfully updated post with ID: ${postToUpdate.id}`);
+        else 
+            alert("An error occurred while attempting to update a post");
+    }
 
     return (
         <div id="dashboard_view">
@@ -63,11 +85,35 @@ const Dashboard = props => {
                         </div>
                     </form>
                 </div>
+                <Modal show={ showUpdateModal } onHide={ e => setShowUpdateModal(false) }>
+                    <Modal.Header closeButton>
+                        Update Post
+                    </Modal.Header>
+                    <Modal.Body>
+                        <form onSubmit={ e => { e.preventDefault(); handleUpdate(); } }>
+                            <label>
+                                Title: 
+                                <input onChange={ e => setReplacementPost({ ...replacementPost, title: e.currentTarget.value }) } className="form-control" />
+                            </label>
+                            <label>
+                                Author: 
+                                <input onChange={ e => setReplacementPost({ ...replacementPost, author: e.currentTarget.value }) } className="form-control" />
+                            </label>
+                            <label>
+                                Body: 
+                                <textarea onChange={ e => setReplacementPost({ ...replacementPost, body: e.currentTarget.value }) } className="form-control"></textarea>
+                            </label>
+                            <div className="text-center mt-2">
+                                <button className="btn btn-danger">Update</button>
+                            </div>
+                        </form>
+                    </Modal.Body>
+                </Modal>
                 <div className="col-3 offset-1">
                     <h4 className="text-center text-danger">
                         All Posts: {posts.length}
                     </h4>
-                    <Query query={POSTS_QUERY}>
+                    <Query query={Client.fetchPosts()}>
                         {
                             ({loading, error, data}) => {
                                 if (loading) return LoadingPostsJsx();
@@ -80,7 +126,7 @@ const Dashboard = props => {
                                 setPosts(POSTS);
 
                                 return posts.map(post => (
-                                    <div className="pl-2 text-muted border mb-3">
+                                    <div onClick={ e => activateUpdateModal(post.id) } className="pl-2 text-muted border mb-3" style={{ cursor: 'pointer' }}>
                                         { post.title }
                                     </div>
                                 ))
